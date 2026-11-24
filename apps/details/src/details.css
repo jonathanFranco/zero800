@@ -1,0 +1,152 @@
+.gv-details { display: flex; flex-direction: column; gap: 28px; }
+
+.gv-details h2 { margin: 0 0 12px; font-size: 1.35rem; font-weight: 800; letter-spacing: -0.01em; }
+
+.gv-details-hero {
+  position: relative;
+  min-height: 420px;
+  display: flex;
+  align-items: flex-end;
+  border-radius: var(--gv-radius-lg);
+  background: var(--gv-surface-2) center / cover no-repeat;
+  overflow: hidden;
+}
+.gv-details-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, var(--gv-bg) 4%, color-mix(in srgb, var(--gv-bg) 65%, transparent) 45%, transparent 100%);
+}
+.gv-details-hero-content { position: relative; z-index: 1; padding: 32px; }
+.gv-details-hero h1 {
+  margin: 6px 0 18px;
+  font-size: clamp(2.2rem, 5.5vw, 4.25rem);
+  font-weight: 800;
+  line-height: 0.95;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.gv-details-genres { margin: 0; color: color-mix(in srgb, var(--gv-text) 85%, transparent); font-weight: 600; text-shadow: 0 1px 12px rgb(0 0 0 / 0.6); }
+
+.gv-details-scores { display: flex; gap: 10px; flex-wrap: wrap; }
+.gv-details-score {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 0;
+  padding: 8px 14px;
+  border-radius: var(--gv-radius-sm);
+  background: color-mix(in srgb, var(--gv-bg) 75%, transparent);
+  color: var(--gv-muted);
+  font-size: 0.9rem;
+}
+.gv-details-score strong { color: var(--gv-text); font-size: 1.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+
+.gv-details-facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 22px;
+  border-radius: var(--gv-radius);
+  background: var(--gv-surface);
+}
+.gv-details-facts dt { color: var(--gv-muted); font-size: 0.85rem; }
+.gv-details-facts dd { margin: 2px 0 0; font-weight: 600; }
+
+.gv-details-note { margin: 0; color: var(--gv-muted); font-size: 0.85rem; }
+.gv-details-translate { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; margin: -4px 0 14px; }
+.gv-details-chip {
+  padding: 6px 14px;
+  border: 1px solid var(--gv-border);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--gv-accent-text);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.gv-details-chip:hover { border-color: var(--gv-accent); }
+span.gv-details-chip { color: var(--gv-muted); cursor: default; }
+
+.gv-details-description { max-width: 70ch; margin: 0; color: color-mix(in srgb, var(--gv-text) 86%, var(--gv-bg)); line-height: 1.7; white-space: pre-line; }
+
+.gv-details-link-button {
+  margin-top: 8px;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--gv-accent-text);
+  cursor: pointer;
+}
+
+.gv-details-shots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.gv-details-shots button {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  border-radius: var(--gv-radius);
+  overflow: hidden;
+  background: var(--gv-surface-2);
+  cursor: zoom-in;
+}
+.gv-details-shots img { display: block; width: 100%; aspect-ratio: 3 / 2; object-fit: cover; }
+
+.gv-details-site { align-self: flex-start; font-weight: 700; text-decoration: none; }
+
+.gv-details-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: color-mix(in srgb, var(--gv-bg) 92%, black);
+}
+.gv-details-lightbox img { max-width: 100%; max-height: 90vh; border-radius: var(--gv-radius-sm); }
+.gv-details-lightbox button {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid var(--gv-border);
+  border-radius: 50%;
+  background: var(--gv-surface);
+  color: var(--gv-text);
+  cursor: pointer;
+}
+
+.gv-details-skeleton { height: 420px; border-radius: var(--gv-radius-lg); background: var(--gv-surface); }
+
+.gv-details-notice {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 20px;
+  border: 1px solid var(--gv-warn);
+  border-radius: var(--gv-radius);
+  background: color-mix(in srgb, var(--gv-warn) 8%, var(--gv-surface));
+  color: var(--gv-muted);
+}
+.gv-details-notice strong { color: var(--gv-text); }
+
+.gv-details-notice button {
+  align-self: flex-start;
+  padding: 8px 14px;
+  border: 1px solid var(--gv-border);
+  border-radius: var(--gv-radius-sm);
+  background: var(--gv-surface-2);
+  color: var(--gv-text);
+  cursor: pointer;
+}

@@ -1,0 +1,23 @@
+{
+  "name": "gamevault",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,shell,catalog,details,deals,news -c blue,cyan,green,magenta,yellow,red \"npm run dev -w @gamevault/api\" \"npm run dev -w @gamevault/shell\" \"npm run dev -w @gamevault/catalog\" \"npm run dev -w @gamevault/details\" \"npm run dev -w @gamevault/deals\" \"npm run dev -w @gamevault/news\"",
+    "build": "npm run build --workspaces --if-present",
+    "preview": "concurrently -k -n api,shell,catalog,details,deals,news -c blue,cyan,green,magenta,yellow,red \"npm run dev -w @gamevault/api\" \"npm run preview -w @gamevault/shell\" \"npm run preview -w @gamevault/catalog\" \"npm run preview -w @gamevault/details\" \"npm run preview -w @gamevault/deals\" \"npm run preview -w @gamevault/news\"",
+    "typecheck": "npm run typecheck --workspaces --if-present"
+  },
+  "devDependencies": {
+    "@types/node": "^22.20.5",
+    "concurrently": "^9.2.1",
+    "typescript": "~5.9.3"
+  },
+  "engines": {
+    "node": "^20.19.0 || >=22.12.0"
+  }
+}

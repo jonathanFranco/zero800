@@ -1,0 +1,159 @@
+name: CI / Deploy
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      apps:
+        description: 'Apps to deploy, comma separated (api, catalog, details, deals, news, shell) or "all"'
+        required: true
+        default: all
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  VERCEL_CLI: vercel@65.12.1
+
+jobs:
+  check:
+    name: check ${{ matrix.app }}
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        app: [shell, catalog, details, deals, news, api]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run typecheck -w @gamevault/shared
+      - run: npm run typecheck -w @gamevault/${{ matrix.app }}
+      - run: npm run build -w @gamevault/${{ matrix.app }} --if-present
+
+  changes:
+    name: pick apps to deploy
+    if: github.event_name != 'pull_request' && github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.pick.outputs.matrix }}
+      any: ${{ steps.pick.outputs.any }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - id: pick
+        env:
+          EVENT: ${{ github.event_name }}
+          INPUT_APPS: ${{ inputs.apps }}
+          BEFORE: ${{ github.event.before }}
+        run: |
+          set -euo pipefail
+          ALL="api catalog details deals news shell"
+          SHARED_USERS="catalog details deals news shell"
+
+          if [ "$EVENT" = "workflow_dispatch" ]; then
+            if [ "$INPUT_APPS" = "all" ]; then
+              apps="$ALL"
+            else
+              apps=$(echo "$INPUT_APPS" | tr ',' ' ')
+              for app in $apps; do
+                case " $ALL " in
+                  *" $app "*) ;;
+                  *) echo "::error::Unknown app: $app (valid: $ALL)"; exit 1 ;;
+                esac
+              done
+            fi
+          elif [ -z "$BEFORE" ] || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
+            apps="$ALL"
+          else
+            files=$(git diff --name-only "$BEFORE" "$GITHUB_SHA")
+            if echo "$files" | grep -qE '^(package(-lock)?\.json|tsconfig\.base\.json|\.github/workflows/)'; then
+              apps="$ALL"
+            else
+              apps=""
+              if echo "$files" | grep -q '^packages/shared/'; then apps="$SHARED_USERS"; fi
+              for app in $ALL; do
+                if echo "$files" | grep -q "^apps/$app/"; then apps="$apps $app"; fi
+              done
+            fi
+          fi
+
+          matrix=$(printf '%s\n' $apps | sort -u | jq -R -s -c '{include: [split("\n")[] | select(length > 0) | {app: ., key: ascii_upcase}]}')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+          if [ "$(echo "$matrix" | jq '.include | length')" -gt 0 ]; then
+            echo "any=true" >> "$GITHUB_OUTPUT"
+            echo "Deploying: $(echo "$matrix" | jq -r '[.include[].app] | join(", ")')" >> "$GITHUB_STEP_SUMMARY"
+          else
+            echo "any=false" >> "$GITHUB_OUTPUT"
+            echo "No app changed; nothing to deploy." >> "$GITHUB_STEP_SUMMARY"
+          fi
+
+  deploy:
+    name: deploy ${{ matrix.app }}
+    needs: [check, changes]
+    if: needs.changes.outputs.any == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    concurrency:
+      group: deploy-${{ matrix.app }}
+      cancel-in-progress: false
+    strategy:
+      fail-fast: false
+      matrix: ${{ fromJSON(needs.changes.outputs.matrix) }}
+    env:
+      VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ secrets[format('VERCEL_PROJECT_ID_{0}', matrix.key)] }}
+      VITE_RAWG_KEY: ${{ secrets.VITE_RAWG_KEY }}
+      VITE_SITE_URL: ${{ vars.SITE_URL }}
+      VITE_API_URL: ${{ vars.API_URL }}
+      VITE_CATALOG_URL: ${{ vars.CATALOG_URL }}
+      VITE_DETAILS_URL: ${{ vars.DETAILS_URL }}
+      VITE_DEALS_URL: ${{ vars.DEALS_URL }}
+      VITE_NEWS_URL: ${{ vars.NEWS_URL }}
+      PUBLIC_URL: ${{ vars[format('{0}_URL', matrix.key)] }}/
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Check required secrets and variables
+        run: |
+          missing=0
+          for name in VERCEL_TOKEN VERCEL_ORG_ID VERCEL_PROJECT_ID VITE_RAWG_KEY VITE_SITE_URL VITE_API_URL \
+                      VITE_CATALOG_URL VITE_DETAILS_URL VITE_DEALS_URL VITE_NEWS_URL; do
+            if [ -z "${!name}" ]; then
+              echo "::error::${name} is not set (see README, section Deploy)"
+              missing=1
+            fi
+          done
+          exit $missing
+
+      - name: Pull Vercel project settings
+        run: npx --yes "$VERCEL_CLI" pull --yes --environment=production --token="$VERCEL_TOKEN"
+
+      - name: Use GitHub values for build variables
+        run: |
+          file=.vercel/.env.production.local
+          touch "$file"
+          for name in VITE_RAWG_KEY VITE_SITE_URL VITE_API_URL VITE_CATALOG_URL VITE_DETAILS_URL \
+                      VITE_DEALS_URL VITE_NEWS_URL PUBLIC_URL; do
+            grep -v "^${name}=" "$file" > "$file.tmp" || true
+            mv "$file.tmp" "$file"
+            printf '%s="%s"\n' "$name" "${!name}" >> "$file"
+          done
+
+      - name: Build
+        run: npx --yes "$VERCEL_CLI" build --prod --token="$VERCEL_TOKEN"
+
+      - name: Deploy to production
+        run: npx --yes "$VERCEL_CLI" deploy --prebuilt --prod --token="$VERCEL_TOKEN"
