@@ -1,8 +1,6 @@
 <p align="center">
-  <img src="apps/shell/public/icon-192.png" width="96" height="96" alt="Logo do Zero800: zero cortado branco sobre verde" />
+  <img src="apps/shell/public/brand/logo-1200.png" width="480" alt="Zero800" />
 </p>
-
-<h1 align="center">Zero800</h1>
 
 <p align="center">
   <strong>Jogos grátis para resgatar, promoções de PC e notícias de games, com preço na sua moeda.</strong><br />

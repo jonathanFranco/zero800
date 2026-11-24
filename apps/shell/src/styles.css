@@ -32,10 +32,8 @@
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
-.brand-mark { width: 34px; height: 34px; flex: none; }
-.brand-mark rect { fill: var(--gv-accent); }
-.brand-mark ellipse,
-.brand-mark path { fill: none; stroke: var(--gv-accent-ink); stroke-width: 3; stroke-linecap: round; }
+.brand-logo { display: block; width: auto; height: 34px; }
+.brand-mark { display: none; width: 40px; height: 40px; }
 
 .sidebar-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; }
 .collapse-btn {
@@ -86,7 +84,8 @@
 
 .is-collapsed .sidebar { padding-inline: 14px; }
 .is-collapsed .sidebar-head { flex-direction: column; }
-.is-collapsed .brand-name,
+.is-collapsed .brand-logo { display: none; }
+.is-collapsed .brand-mark { display: block; }
 .is-collapsed .side-nav .nav-label { display: none; }
 .is-collapsed .side-nav a { justify-content: center; padding-inline: 0; }
 .is-collapsed .collapse-btn svg { rotate: 180deg; }
@@ -163,7 +162,7 @@
 
   .topbar { padding: 12px 0; }
   .topbar-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  .topbar-row .brand-name { font-size: 1.15rem; }
+  .topbar-row .brand-logo { height: 30px; }
   .topbar-row .prefs { flex: none; }
   .topbar-row .gv-select { width: auto; }
   .search { max-width: none; }
@@ -195,7 +194,8 @@
 }
 
 @media (max-width: 340px) {
-  .topbar-row .brand-name { display: none; }
+  .topbar-row .brand-logo { display: none; }
+  .topbar-row .brand-mark { display: block; width: 34px; height: 34px; }
 }
 
 .home { display: flex; flex-direction: column; gap: 56px; }

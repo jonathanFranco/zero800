@@ -143,12 +143,8 @@ function Brand() {
   const t = useT();
   return (
     <Link to="/" className="brand" aria-label={t('home')}>
-      <svg className="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
-        <rect width="32" height="32" rx="9" />
-        <ellipse cx="16" cy="16" rx="6.5" ry="9" />
-        <path d="M11 24.5 21 7.5" />
-      </svg>
-      <span className="brand-name">Zero800</span>
+      <img className="brand-logo" src="/brand/logo.png" alt="Zero800" width="482" height="96" />
+      <img className="brand-mark" src="/brand/logo-mark.png" alt="Zero800" width="128" height="128" />
     </Link>
   );
 }
