@@ -16,6 +16,7 @@
   <img src="https://img.shields.io/badge/Vue-3-42b883?logo=vuedotjs&logoColor=white" alt="Vue 3" />
   <img src="https://img.shields.io/badge/Svelte-5-ff3e00?logo=svelte&logoColor=white" alt="Svelte 5" />
   <img src="https://img.shields.io/badge/Vite-8-646cff?logo=vite&logoColor=white" alt="Vite 8" />
+  <img src="https://img.shields.io/badge/Turborepo-2-ef4444?logo=turborepo&logoColor=white" alt="Turborepo 2" />
   <img src="https://img.shields.io/badge/TypeScript-strict-3178c6?logo=typescript&logoColor=white" alt="TypeScript strict" />
 </p>
 
@@ -145,20 +146,23 @@ Cada app também roda sozinho, sem o shell:
 | Script | O que faz |
 |---|---|
 | `npm run dev` | Todos os apps em modo dev |
-| `npm run build` | Build de produção de todos |
-| `npm run preview` | Serve os builds, para testar a federação como em produção |
-| `npm run typecheck` | `tsc`, `vue-tsc` e `svelte-check` em cada app |
+| `npm run build` | Build de produção de todos, com cache |
+| `npm run preview` | Gera os builds e serve, para testar a federação como em produção |
+| `npm run typecheck` | `tsc`, `vue-tsc` e `svelte-check` em cada app, com cache |
+| `npx turbo dev --filter=@gamevault/deals` | Só um app (troque o nome) |
+
+As tarefas rodam pelo [Turborepo](https://turborepo.com) ([`turbo.json`](turbo.json)): em paralelo, na ordem das dependências e com cache. Rodar o build de novo sem mudar nada leva milissegundos.
 
 ## Deploy
 
-Cada app é um projeto separado na Vercel e é publicado de forma independente pelo GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)). Todo push e pull request passa por typecheck e build; num push na `master`, só os apps que mudaram vão para produção.
+Cada app é um projeto separado na Vercel e é publicado de forma independente pelo GitHub Actions ([`ci.yml`](.github/workflows/ci.yml)). Todo push e pull request passa por typecheck e build (com o cache do Turborepo guardado entre execuções); num push na `master`, só os apps afetados vão para produção. Quem decide é o `turbo ls --affected`, a partir das dependências entre os pacotes, então um app novo entra na regra sem mexer no workflow.
 
 | O que mudou | O que é publicado |
 |---|---|
 | `apps/<app>/` | só esse app |
 | `packages/shared/` | os 5 apps de tela (a API não usa o `shared`) |
-| `package.json`, lockfile, `tsconfig.base.json` ou o workflow | todos |
-| só documentação | nada |
+| `package.json` da raiz, `tsconfig.base.json` ou `turbo.json` | todos |
+| só documentação ou o workflow | nada (use *Run workflow* se precisar) |
 
 Para publicar à mão: **Actions → CI / Deploy → Run workflow**, informando os apps (`shell,deals`) ou `all`.
 
@@ -213,6 +217,7 @@ zero800/
 ├── packages/
 │   └── shared/     contratos de eventos e montagem, i18n, moeda, design tokens
 ├── docs/screenshots/
+├── turbo.json
 └── .github/workflows/ci.yml
 ```
 

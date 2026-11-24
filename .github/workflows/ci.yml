@@ -20,22 +20,21 @@ env:
 
 jobs:
   check:
-    name: check ${{ matrix.app }}
+    name: typecheck & build
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        app: [shell, catalog, details, deals, news, api]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
+      - uses: actions/cache@v4
+        with:
+          path: .turbo/cache
+          key: turbo-${{ runner.os }}-${{ github.sha }}
+          restore-keys: turbo-${{ runner.os }}-
       - run: npm ci
-      - run: npm run typecheck -w @gamevault/shared
-      - run: npm run typecheck -w @gamevault/${{ matrix.app }}
-      - run: npm run build -w @gamevault/${{ matrix.app }} --if-present
+      - run: npx turbo run typecheck build
 
   changes:
     name: pick apps to deploy
@@ -56,7 +55,6 @@ jobs:
         run: |
           set -euo pipefail
           ALL="api catalog details deals news shell"
-          SHARED_USERS="catalog details deals news shell"
 
           if [ "$EVENT" = "workflow_dispatch" ]; then
             if [ "$INPUT_APPS" = "all" ]; then
@@ -73,16 +71,10 @@ jobs:
           elif [ -z "$BEFORE" ] || ! git cat-file -e "${BEFORE}^{commit}" 2>/dev/null; then
             apps="$ALL"
           else
-            files=$(git diff --name-only "$BEFORE" "$GITHUB_SHA")
-            if echo "$files" | grep -qE '^(package(-lock)?\.json|tsconfig\.base\.json|\.github/workflows/)'; then
-              apps="$ALL"
-            else
-              apps=""
-              if echo "$files" | grep -q '^packages/shared/'; then apps="$SHARED_USERS"; fi
-              for app in $ALL; do
-                if echo "$files" | grep -q "^apps/$app/"; then apps="$apps $app"; fi
-              done
-            fi
+            turbo_version=$(node -p "require('./package.json').devDependencies.turbo")
+            apps=$(TURBO_SCM_BASE="$BEFORE" TURBO_SCM_HEAD="$GITHUB_SHA" \
+              npx --yes "turbo@${turbo_version}" ls --affected --output=json \
+              | jq -r '.packages.items[].path | select(startswith("apps/")) | ltrimstr("apps/")')
           fi
 
           matrix=$(printf '%s\n' $apps | sort -u | jq -R -s -c '{include: [split("\n")[] | select(length > 0) | {app: ., key: ascii_upcase}]}')

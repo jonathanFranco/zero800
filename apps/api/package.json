@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p .",
+    "preview": "vite"
   },
   "dependencies": {
     "entities": "^9.0.0",
