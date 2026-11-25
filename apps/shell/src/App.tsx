@@ -86,11 +86,13 @@ export function App() {
 
       <div className="main">
         <header className="topbar">
-          <div className="topbar-row">
-            <Brand />
-            <Preferences compact />
+          <div className="topbar-inner">
+            <div className="topbar-row">
+              <Brand />
+              <Preferences compact />
+            </div>
+            <SearchBox />
           </div>
-          <SearchBox />
         </header>
 
         <main className="content">
